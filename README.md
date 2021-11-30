@@ -18,7 +18,6 @@ Bahan bahan yang dibutuhkan untuk versi 1.0 adalah
 - Button atau Tombol
 - Relay 2 channel sebagai switch atau stopkontak.
 
-<<<<<<< HEAD
 #### -- KEDEPANNYA MUNGKIN MENGALAMI PERUBAHAN
 ### Cara pasang
 Akan saya buat dokumentasi nya, untuk sekarang maaf tidak bisa.
@@ -45,11 +44,3 @@ I will make the documentation, for now sorry I can't.
 
 #### WARNING
 For the damage that occurs as it is your responsibility, I am not responsible for any damage
-=======
-### -- KEDEPANNYA MUNGKIN MENGALAMI PERUBAHAN
-# Cara pasang
-Akan saya buat dokumentasi nya, untuk sekarang maaf tidak bisa.
-
-## PERINGATAN
-Untuk kerusakan yang terjadi sebagai mana itu menjadi tanggung jawab Anda, saya tidak tanggung jawab atas kerusakan apapun
->>>>>>> 66c7e52eb3d12ec4777793f3945270adda114fea
