@@ -5,3 +5,4 @@
 .vscode/ipch
 src/python/__pycache__/*
 src/python/cli/__pycache__/*
+my.log
