@@ -1,14 +1,8 @@
 # SPR-Project
-<<<<<<< HEAD
 ## Indonesian
 Sebuah proyek dengan sumber terbuka yang dirancang untuk mengkontrol pendingin ruangan berbasis Arduino Uno.
 
 ### Bahan bahan
-=======
-Sebuah proyek dengan sumber terbuka yang dirancang untuk mengkontrol pendingin ruangan berbasis Arduino Uno.
-
-# Bahan bahan
->>>>>>> 66c7e52eb3d12ec4777793f3945270adda114fea
 Bahan bahan yang dibutuhkan untuk versi 1.0 adalah
 - Arduino Uno R3 SMD (Boleh menggunakan arduino lain)
 - DHT 11
