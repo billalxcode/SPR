@@ -3,3 +3,5 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+src/python/__pycache__/*
+src/python/cli/__pycache__/*
