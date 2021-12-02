@@ -2,172 +2,165 @@
 #include <DHT.h>
 #include <LiquidCrystal_I2C.h>
 
-int PIN_LED_GRN = 5;
-int PIN_LED_RED = 6;
-int PIN_DHT11 = 8;
-int PIN_BUTTON = 7;
-int PIN_POTENSIO_MIN = A0;
-int PIN_POTENSIO_MAX = A1;
-int PIN_RELAY_L = 2;
-int PIN_RELAY_R = 3;
+const int PIN_RELAY_L = 3;
+const int PIN_RELAY_R = 4;
+const int PIN_LED_GRN = 5;
+const int PIN_LED_RED = 6;
+const int PIN_DHT11 = 8;
+const int PIN_BTN = 7;
 
-int MIN_VALUE = 0;
-int MAX_VALUE = 0;
+const int LCD_ROW = 2;
+const int LCD_COL = 16;
 
-int LCD_ROW = 2;
-int LCD_COLUMN = 16;
+const int DEBUG_LCD = 1;
+const int DEBUG_POTENSIO = 2;
+const int DEBUG_DHT11 = 3;
+const int DEBUG_BTN = 4;
+const int DEBUG_RELAY = 5;
+const int DEBUG_LED = 6;
+const int DEBUG_ALL = 7;
 
-int max_counter = 10;
-int current_counter = 0;
+const uint8_t PIN_POT_MIN = A0;
+const uint8_t PIN_POT_MAX = A1;
+const uint8_t DHT_TYPE = DHT11;
 
-DHT dht(PIN_DHT11, DHT11);
-LiquidCrystal_I2C lcd(0x27, LCD_ROW, LCD_COLUMN);
+int POTENSIO_MIN = 0;
+int POTENSIO_MAX = 0;
 
-int read_potensio(uint8_t pin)
-{
-    int potensio_value = analogRead(pin);
-    int value_output = map(potensio_value, 0, 1024, 0, 40);
-    return value_output;
-}
+int button_counter = 0;
+int max_buton_counter = 30;
+
+DHT dht_sensor(PIN_DHT11, DHT_TYPE);
+LiquidCrystal_I2C lcd(0x27, LCD_COL, LCD_ROW);
 
 int button_is_pressed()
 {
-    int btn_status = digitalRead(PIN_BUTTON);
-    Serial.println(btn_status);
-    return btn_status;
+    int isPressed = digitalRead(PIN_BTN);
+    return isPressed;
 }
 
-void display_boot(int delay_time)
+int read_potensio(uint8_t PIN_POT)
 {
-    lcd.setCursor(0, 0);
-    lcd.print("Booting...");
-    lcd.setCursor(0, 1);
-    lcd.print("(c)Billal Fauzan");
-
-    Serial.begin(9600);
-    Serial.println("(c) Copyright 2021 Billal Fauzan (billal.xcode@gmail.com)");
-    dht.begin();
-
-    pinMode(PIN_BUTTON, INPUT);
-    pinMode(PIN_LED_RED, OUTPUT);
-    pinMode(PIN_LED_GRN, OUTPUT);
-    pinMode(PIN_RELAY_L, OUTPUT);
-    pinMode(PIN_RELAY_R, OUTPUT);
-    delay(delay_time);
-    lcd.clear();
+    int current_value = analogRead(PIN_POT);
+    int value = map(current_value, 0, 1024, 0, 40);
+    return value;
 }
 
-void start_counter()
+int start_counter()
 {
-    if (current_counter <= (max_counter + 1))
+    if (button_counter > max_buton_counter)
     {
-        current_counter += 1;
+        button_counter = 0;
+        return 1;
+    }
+    else
+    {
+        button_counter++;
+        return 0;
     }
 }
 
-void disable_all()
+void debug_lcd(int debug_type)
 {
-    digitalWrite(PIN_RELAY_L, LOW);
-    digitalWrite(PIN_RELAY_R, LOW);
-    digitalWrite(PIN_LED_GRN, LOW);
-    digitalWrite(PIN_LED_RED, LOW);
-}
-
-void display_settings()
-{
-    current_counter = 0;
-    Serial.println("Settings Mode");
-    lcd.clear();
-    disable_all();
-    while (1)
+    if (debug_type == DEBUG_LCD)
     {
-
-        int potensio_min = read_potensio(PIN_POTENSIO_MIN);
-        int potensio_max = read_potensio(PIN_POTENSIO_MAX);
-
-        lcd.setCursor(0, 0);
-        lcd.print("MIN: ");
-        lcd.print(potensio_min);
-        lcd.print("   ");
-        lcd.setCursor(0, 1);
-        lcd.print("MAX: ");
-        lcd.print(potensio_max);
-        lcd.print("   ");
-
-        int is_pressed = button_is_pressed();
-        if (is_pressed == 1 && current_counter >= max_counter)
-        {
-            MIN_VALUE = potensio_min;
-            MAX_VALUE = potensio_max;
-            lcd.clear();
-            break;
-        }
-        start_counter();
-        delay(150);
-    }
-
-}
-
-void led_automate()
-{
-    Serial.print("MIN: ");
-    Serial.print(MIN_VALUE);
-    Serial.print(" | MAX: ");
-    Serial.println(MAX_VALUE);
-    int current_temperature = dht.readTemperature();
-    // int current_humidity = dht.readHumidity();
-    Serial.println(current_temperature);
-    if (current_temperature <= MIN_VALUE)
-    {
-        digitalWrite(PIN_LED_GRN, HIGH);
-        digitalWrite(PIN_LED_RED, LOW);
-        digitalWrite(PIN_RELAY_L, LOW);
-        digitalWrite(PIN_RELAY_R, LOW);
-    } else if (current_temperature >= MAX_VALUE)
-    {
-        digitalWrite(PIN_LED_GRN, LOW);
-        digitalWrite(PIN_LED_RED, HIGH);
-        digitalWrite(PIN_RELAY_L, HIGH);
-        digitalWrite(PIN_RELAY_R, HIGH);
-    } else
-    {
-        digitalWrite(PIN_LED_GRN, HIGH);
-        digitalWrite(PIN_LED_RED, HIGH);
-        digitalWrite(PIN_RELAY_L, LOW);
-        digitalWrite(PIN_RELAY_R, LOW);
+        Serial.print("Potensio: ");
+        Serial.print(read_potensio(PIN_POT_MIN));
+        Serial.print("/");
+        Serial.print(read_potensio(PIN_POT_MAX));
+        Serial.print("%");
+        Serial.println();
+        Serial.print("DHT11: ");
+        Serial.print(dht_sensor.readTemperature());
+        Serial.print("/");
+        Serial.print(dht_sensor.readHumidity());
+        Serial.print("%");
     }
 }
 
-void setup()
+void display_boot()
 {
     lcd.init();
     lcd.clear();
     lcd.backlight();
+    
+    // Set liquid crystal display cursor to row 0 and column 0
+    for (int column = 0; column < (LCD_COL + 1); column++)
+    {
+        // Set liquid crystal display cursor to row 1 and column x
+        lcd.clear();
+        lcd.setCursor(3, 0);
+        // Print to lcd
+        lcd.print("( Booting )");
+        lcd.setCursor(column, 1);
+        lcd.print("(c)Billal Fauzan");
+        delay(250);
+    }
 
-    display_boot(3000);
+    delay(2000);
+}
+
+void setup()
+{
+    display_boot();
+
+    Serial.begin(9600);
+    // Setup pin output
+    pinMode(PIN_RELAY_L, OUTPUT);
+    pinMode(PIN_RELAY_R, OUTPUT);
+    pinMode(PIN_LED_GRN, OUTPUT);
+    pinMode(PIN_LED_RED, OUTPUT);
+
+    // Setup pin input
+    pinMode(PIN_BTN, INPUT);
+    pinMode(PIN_POT_MIN, INPUT);
+    pinMode(PIN_POT_MAX, INPUT);
+
+    // Clear lcd
+    lcd.clear();
+}
+
+void setting_mode()
+{
+    lcd.clear();
+    button_counter = 0;
+    while (1)
+    {
+        debug_lcd(DEBUG_LCD);
+
+        start_counter(); // Add counter
+
+        int button_state = button_is_pressed();
+        if (button_state == 1 && button_counter > max_buton_counter)
+        {
+            POTENSIO_MIN = read_potensio(PIN_POT_MIN);
+            POTENSIO_MAX = read_potensio(PIN_POT_MAX);
+            button_counter = 0;
+            break;
+        }
+
+        // Read potensio
+        int pot_min = read_potensio(PIN_POT_MIN);
+        int pot_max = read_potensio(PIN_POT_MAX);
+
+        // Display potensio
+        lcd.setCursor(0, 0);
+        lcd.print("Min: ");
+        lcd.print(pot_min);
+        lcd.setCursor(0, 1);
+        lcd.print("Max: ");
+        lcd.print(pot_max);
+    }
+    
 }
 
 void loop()
 {
-    int is_pressed = button_is_pressed();
-    if (is_pressed == 1 && current_counter >= max_counter)
-    {
-        display_settings();
-    }
-
-    int temperature = dht.readTemperature();
-    int humidity = dht.readHumidity();
-
-    lcd.setCursor(0, 0);
-    lcd.print("C: ");
-    lcd.print(temperature);
-    lcd.print("   ");
-    lcd.setCursor(0, 1);
-    lcd.print("H: ");
-    lcd.print(humidity);
-    lcd.print("   ");
-
-    led_automate();
     start_counter();
-    delay(150);
+
+    int button_state = button_is_pressed();
+    if (button_state == 1 && button_counter > max_buton_counter)
+    {
+        setting_mode();
+    }
 }
