@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <DHT.h>
 #include <LiquidCrystal_I2C.h>
+#include "debug.h"
 
 const int PIN_RELAY_L = 3;
 const int PIN_RELAY_R = 4;
@@ -12,14 +13,6 @@ const int PIN_BTN = 7;
 const int LCD_ROW = 2;
 const int LCD_COL = 16;
 
-const int DEBUG_LCD = 1;
-const int DEBUG_POTENSIO = 2;
-const int DEBUG_DHT11 = 3;
-const int DEBUG_BTN = 4;
-const int DEBUG_RELAY = 5;
-const int DEBUG_LED = 6;
-const int DEBUG_ALL = 7;
-
 const uint8_t PIN_POT_MIN = A0;
 const uint8_t PIN_POT_MAX = A1;
 const uint8_t DHT_TYPE = DHT11;
@@ -30,8 +23,16 @@ int POTENSIO_MAX = 0;
 int button_counter = 0;
 int max_buton_counter = 30;
 
+Debug debug;
 DHT dht_sensor(PIN_DHT11, DHT_TYPE);
 LiquidCrystal_I2C lcd(0x27, LCD_COL, LCD_ROW);
+
+int read_potensiometer(uint8_t PIN_POT)
+{
+    int current_value = analogRead(PIN_POT);
+    int value = map(current_value, 0, 1024, 0, 40);
+    return value;
+}
 
 int button_is_pressed()
 {
@@ -39,15 +40,9 @@ int button_is_pressed()
     return isPressed;
 }
 
-int read_potensio(uint8_t PIN_POT)
-{
-    int current_value = analogRead(PIN_POT);
-    int value = map(current_value, 0, 1024, 0, 40);
-    return value;
-}
-
 int start_counter()
 {
+    debug.debug_counter(button_counter);
     if (button_counter > max_buton_counter)
     {
         button_counter = 0;
@@ -57,24 +52,6 @@ int start_counter()
     {
         button_counter++;
         return 0;
-    }
-}
-
-void debug_lcd(int debug_type)
-{
-    if (debug_type == DEBUG_LCD)
-    {
-        Serial.print("Potensio: ");
-        Serial.print(read_potensio(PIN_POT_MIN));
-        Serial.print("/");
-        Serial.print(read_potensio(PIN_POT_MAX));
-        Serial.print("%");
-        Serial.println();
-        Serial.print("DHT11: ");
-        Serial.print(dht_sensor.readTemperature());
-        Serial.print("/");
-        Serial.print(dht_sensor.readHumidity());
-        Serial.print("%");
     }
 }
 
@@ -118,30 +95,30 @@ void setup()
 
     // Clear lcd
     lcd.clear();
+    debug.setup_pin(PIN_POT_MIN, PIN_POT_MAX, PIN_BTN);
+    debug.initialize();
 }
 
 void setting_mode()
 {
     lcd.clear();
-    button_counter = 0;
+    button_counter = 0; 
     while (1)
     {
-        debug_lcd(DEBUG_LCD);
-
         start_counter(); // Add counter
 
         int button_state = button_is_pressed();
         if (button_state == 1 && button_counter > max_buton_counter)
         {
-            POTENSIO_MIN = read_potensio(PIN_POT_MIN);
-            POTENSIO_MAX = read_potensio(PIN_POT_MAX);
+            POTENSIO_MIN = read_potensiometer(PIN_POT_MIN);
+            POTENSIO_MAX = read_potensiometer(PIN_POT_MAX);
             button_counter = 0;
             break;
         }
 
         // Read potensio
-        int pot_min = read_potensio(PIN_POT_MIN);
-        int pot_max = read_potensio(PIN_POT_MAX);
+        int pot_min = read_potensiometer(PIN_POT_MIN);
+        int pot_max = read_potensiometer(PIN_POT_MAX);
 
         // Display potensio
         lcd.setCursor(0, 0);
@@ -157,7 +134,6 @@ void setting_mode()
 void loop()
 {
     start_counter();
-
     int button_state = button_is_pressed();
     if (button_state == 1 && button_counter > max_buton_counter)
     {
